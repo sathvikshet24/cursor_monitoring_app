@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-strip mb-4">
+  <span class="phase-badge">Local registry</span>
+  <h1 class="page-heading">Add server</h1>
+  <p class="page-lead">
+    Register a Linux host for read-only monitoring. Credentials are stored only in the local
+    SQLite registry and used for SSH metric collection.
+  </p>
+</section>
+
+<section class="login-wrap">
+  <div class="login-panel add-server-panel">
+    {% if error %}
+    <div class="alert alert-danger py-2" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('main.servers_add') }}" class="login-form" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="mb-3">
+        <label class="form-label" for="hostname">Hostname or IP</label>
+        <input class="form-control app-input" type="text" id="hostname" name="hostname" required
+               maxlength="253" value="{{ form.hostname }}"
+               placeholder="localhost or 127.0.0.1" autofocus>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="label">Name of this inventory</label>
+        <input class="form-control app-input" type="text" id="label" name="label" required
+               maxlength="100" value="{{ form.label }}"
+               placeholder="e.g. Local demo host">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="ssh_username">SSH username</label>
+        <input class="form-control app-input" type="text" id="ssh_username" name="ssh_username" required
+               maxlength="64" value="{{ form.ssh_username }}"
+               placeholder="e.g. jumpuser17">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="ssh_password">SSH password <span class="text-muted">(optional if key path set)</span></label>
+        <input class="form-control app-input" type="password" id="ssh_password" name="ssh_password"
+               value="" placeholder="Leave blank when using a key">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="ssh_key_path">SSH private key path <span class="text-muted">(optional if password set)</span></label>
+        <input class="form-control app-input" type="text" id="ssh_key_path" name="ssh_key_path"
+               maxlength="512" value="{{ form.ssh_key_path }}"
+               placeholder="/home/you/.ssh/id_ed25519">
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" for="ssh_port">SSH port</label>
+        <input class="form-control app-input" type="number" id="ssh_port" name="ssh_port"
+               min="1" max="65535" value="{{ form.ssh_port or 22 }}">
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-accent flex-grow-1">Add to registry</button>
+        <a class="btn btn-outline-light" href="{{ url_for('main.dashboard') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

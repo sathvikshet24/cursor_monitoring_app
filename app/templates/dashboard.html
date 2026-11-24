@@ -2,31 +2,271 @@
 
 {% block content %}
 <section class="hero-strip mb-4">
-  <span class="phase-badge">Read-only demo</span>
-  <h1 class="page-heading">Monitoring — read-only demo</h1>
-  <p class="page-lead">
-    Agentless Linux host metrics for L1–L3 teams. Inventory and live CPU / memory / network / ports
-    appear as hosts are added.
-  </p>
+  <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+    <div>
+      <h1 class="page-heading">Dashboard</h1>
+      <p class="page-lead mb-0">
+        Host details and live usage for registered servers.
+        <span id="refresh-status" class="text-muted">Refreshes every {{ (refresh_ms / 1000)|int }}s</span>
+      </p>
+    </div>
+    <a class="btn btn-accent mt-1" href="{{ url_for('main.servers_add') }}">Add server</a>
+  </div>
 </section>
 
-<section class="option-grid" aria-label="Dashboard options">
-  <article class="option-card">
-    <h2 class="option-title">Servers</h2>
-    <p class="option-copy mb-0">
-      {% if servers %}
-        {{ servers|length }} host{{ 's' if servers|length != 1 else '' }} registered. Inventory and reachability show here.
-      {% else %}
-        Inventory and reachability will appear here after admin setup.
-      {% endif %}
-    </p>
-  </article>
+{% if servers %}
+<section class="server-stack" aria-label="Monitored servers">
+  {% for server in servers %}
+  {% set m = server.metrics or {} %}
+  {% set ok = m.status == 'ok' %}
+  <article class="server-panel" data-server-id="{{ server.id }}">
+    <header class="server-panel-head">
+      <div>
+        <h2 class="server-panel-title">
+          {% if server.label %}{{ server.label }}{% else %}{{ server.hostname }}{% endif %}
+        </h2>
+        <p class="server-panel-meta mb-0">
+          <code>{{ server.hostname }}</code>
+          <span class="js-status status-pill {% if ok %}status-ok{% else %}status-bad{% endif %}">
+            {% if ok %}Online{% else %}{{ m.error or m.status or 'SSH failed' }}{% endif %}
+          </span>
+        </p>
+      </div>
+      <form method="post" action="{{ url_for('main.servers_remove', server_id=server.id) }}" class="m-0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger"
+                onclick="return confirm('Remove {{ server.hostname }} from the local registry only?');">
+          Remove
+        </button>
+      </form>
+    </header>
 
-  <article class="option-card">
-    <h2 class="option-title">Live metrics</h2>
-    <p class="option-copy mb-0">
-      CPU, memory, network, and listening ports refresh every 30 seconds.
-    </p>
+    {% if ok %}
+    <dl class="host-facts js-host-facts">
+      <div class="host-fact">
+        <dt>CPUs</dt>
+        <dd class="js-cpu-count">{{ m.cpu_count if m.cpu_count is not none else "—" }}</dd>
+      </div>
+      <div class="host-fact">
+        <dt>Memory</dt>
+        <dd class="js-mem-info">{{ m.memory_total_info or "—" }}</dd>
+      </div>
+      <div class="host-fact">
+        <dt>Uptime</dt>
+        <dd class="js-uptime">{{ m.uptime or "—" }}</dd>
+      </div>
+      <div class="host-fact">
+        <dt>Kernel</dt>
+        <dd class="js-kernel">{{ m.kernel or "—" }}</dd>
+      </div>
+      <div class="host-fact">
+        <dt>IP</dt>
+        <dd class="js-ips">{% if m.ips %}{{ m.ips|join(', ') }}{% else %}—{% endif %}</dd>
+      </div>
+      <div class="host-fact">
+        <dt>Load</dt>
+        <dd class="js-load">{{ m.load or "—" }}</dd>
+      </div>
+    </dl>
+
+    <div class="metric-grid">
+      <section class="metric-card metric-card-wide" aria-label="CPU usage">
+        <h3 class="metric-label">CPU Usage</h3>
+        <p class="metric-value js-cpu">{% if m.cpu_percent is not none %}{{ m.cpu_percent }}%{% else %}—{% endif %}</p>
+        <div class="metric-bar" aria-hidden="true">
+          <span class="metric-bar-fill js-cpu-bar" style="width: {{ m.cpu_percent or 0 }}%;"></span>
+        </div>
+        <h4 class="metric-subhead">Top processes</h4>
+        <ul class="proc-list js-top-procs">
+          {% if m.top_procs %}
+            {% for p in m.top_procs %}
+            <li><span class="proc-name">{{ p.name }}</span><span class="proc-meta">{{ p.cpu }}% CPU · pid {{ p.pid }}</span></li>
+            {% endfor %}
+          {% else %}
+            <li class="text-muted">No process data</li>
+          {% endif %}
+        </ul>
+      </section>
+
+      <section class="metric-card" aria-label="Memory usage">
+        <h3 class="metric-label">Memory Usage</h3>
+        <p class="metric-value js-memory-pct">{% if m.memory_percent is not none %}{{ m.memory_percent }}%{% else %}—{% endif %}</p>
+        <p class="metric-sub js-memory-detail">
+          {% if m.memory_used and m.memory_total %}{{ m.memory_used }} / {{ m.memory_total }}{% else %}—{% endif %}
+        </p>
+        <div class="metric-bar" aria-hidden="true">
+          <span class="metric-bar-fill js-memory-bar" style="width: {{ m.memory_percent or 0 }}%;"></span>
+        </div>
+      </section>
+
+      <section class="metric-card" aria-label="Network usage">
+        <h3 class="metric-label">Network Usage</h3>
+        <p class="metric-value metric-value-sm">
+          <span class="net-line"><span class="net-k">RX</span> <span class="js-net-rx">{{ m.network_rx or "—" }}</span></span>
+          <span class="net-line"><span class="net-k">TX</span> <span class="js-net-tx">{{ m.network_tx or "—" }}</span></span>
+        </p>
+      </section>
+    </div>
+
+    <section class="disk-section" aria-label="Disk usage">
+      <h3 class="metric-label mb-2">Disk Usage</h3>
+      <div class="disk-list js-disk-list">
+        {% if m.disks %}
+          {% for d in m.disks %}
+          <div class="disk-row">
+            <div class="disk-row-head">
+              <span class="disk-mount"><code>{{ d.mount }}</code></span>
+              <span class="disk-pct">{{ d.used_percent }}%</span>
+            </div>
+            <div class="disk-row-sub">{{ d.used }} / {{ d.total }} · {{ d.filesystem }}</div>
+            <div class="metric-bar" aria-hidden="true">
+              <span class="metric-bar-fill" style="width: {{ d.used_percent or 0 }}%;"></span>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted mb-0">No disks reported</p>
+        {% endif %}
+      </div>
+    </section>
+    {% else %}
+    <p class="metric-error js-error mb-0">Could not collect metrics over SSH.</p>
+    {% endif %}
   </article>
+  {% endfor %}
 </section>
+{% else %}
+<p class="text-muted mb-0">
+  No servers registered.
+  <a href="{{ url_for('main.servers_add') }}">Add a server</a> to start monitoring.
+</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if servers %}
+<script>
+(function () {
+  const refreshMs = {{ refresh_ms|int }};
+  const metricsUrl = {{ url_for('main.api_metrics')|tojson }};
+  const statusEl = document.getElementById('refresh-status');
+
+  function esc(text) {
+    const d = document.createElement('div');
+    d.textContent = text == null ? '' : String(text);
+    return d.innerHTML;
+  }
+
+  function setBar(el, pct) {
+    if (!el) return;
+    const n = pct == null ? 0 : Math.max(0, Math.min(100, Number(pct)));
+    el.style.width = n + '%';
+  }
+
+  function setText(panel, sel, value) {
+    const el = panel.querySelector(sel);
+    if (el) el.textContent = value == null || value === '' ? '—' : String(value);
+  }
+
+  function renderProcs(panel, procs) {
+    const ul = panel.querySelector('.js-top-procs');
+    if (!ul) return;
+    if (!procs || !procs.length) {
+      ul.innerHTML = '<li class="text-muted">No process data</li>';
+      return;
+    }
+    ul.innerHTML = procs.map(function (p) {
+      return '<li><span class="proc-name">' + esc(p.name) + '</span>' +
+        '<span class="proc-meta">' + esc(p.cpu) + '% CPU · pid ' + esc(p.pid) + '</span></li>';
+    }).join('');
+  }
+
+  function renderDisks(panel, disks) {
+    const box = panel.querySelector('.js-disk-list');
+    if (!box) return;
+    if (!disks || !disks.length) {
+      box.innerHTML = '<p class="text-muted mb-0">No disks reported</p>';
+      return;
+    }
+    box.innerHTML = disks.map(function (d) {
+      const pct = d.used_percent == null ? 0 : d.used_percent;
+      return '<div class="disk-row">' +
+        '<div class="disk-row-head">' +
+          '<span class="disk-mount"><code>' + esc(d.mount) + '</code></span>' +
+          '<span class="disk-pct">' + esc(pct) + '%</span>' +
+        '</div>' +
+        '<div class="disk-row-sub">' + esc(d.used) + ' / ' + esc(d.total) +
+          ' · ' + esc(d.filesystem) + '</div>' +
+        '<div class="metric-bar" aria-hidden="true">' +
+          '<span class="metric-bar-fill" style="width: ' + Math.max(0, Math.min(100, Number(pct))) + '%;"></span>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  function applyServer(s) {
+    const panel = document.querySelector('[data-server-id="' + s.id + '"]');
+    if (!panel) return;
+    const ok = s.status === 'ok';
+    const status = panel.querySelector('.js-status');
+    if (status) {
+      status.className = 'js-status status-pill ' + (ok ? 'status-ok' : 'status-bad');
+      status.textContent = ok ? 'Online' : (s.error || s.status || 'SSH failed');
+    }
+    if (!ok) return;
+
+    setText(panel, '.js-cpu-count', s.cpu_count);
+    setText(panel, '.js-mem-info', s.memory_total_info);
+    setText(panel, '.js-uptime', s.uptime);
+    setText(panel, '.js-kernel', s.kernel);
+    setText(panel, '.js-ips', (s.ips && s.ips.length) ? s.ips.join(', ') : '—');
+    setText(panel, '.js-load', s.load);
+
+    const cpu = panel.querySelector('.js-cpu');
+    if (cpu) cpu.textContent = s.cpu_percent != null ? s.cpu_percent + '%' : '—';
+    setBar(panel.querySelector('.js-cpu-bar'), s.cpu_percent);
+    renderProcs(panel, s.top_procs || []);
+
+    const memPct = panel.querySelector('.js-memory-pct');
+    if (memPct) memPct.textContent = s.memory_percent != null ? s.memory_percent + '%' : '—';
+    const memDetail = panel.querySelector('.js-memory-detail');
+    if (memDetail) {
+      memDetail.textContent = (s.memory_used && s.memory_total)
+        ? (s.memory_used + ' / ' + s.memory_total) : '—';
+    }
+    setBar(panel.querySelector('.js-memory-bar'), s.memory_percent);
+
+    const rx = panel.querySelector('.js-net-rx');
+    if (rx) rx.textContent = s.network_rx || '—';
+    const tx = panel.querySelector('.js-net-tx');
+    if (tx) tx.textContent = s.network_tx || '—';
+
+    renderDisks(panel, s.disks || []);
+  }
+
+  async function poll() {
+    try {
+      const res = await fetch(metricsUrl, {
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin'
+      });
+      if (res.status === 401 || res.redirected) {
+        window.location.href = {{ url_for('main.login')|tojson }};
+        return;
+      }
+      if (!res.ok) throw new Error('refresh failed');
+      const data = await res.json();
+      (data.servers || []).forEach(applyServer);
+      if (statusEl) {
+        statusEl.textContent = 'Updated ' + new Date().toLocaleTimeString() +
+          ' · next in ' + Math.round((data.refresh_ms || refreshMs) / 1000) + 's';
+      }
+    } catch (e) {
+      if (statusEl) statusEl.textContent = 'Refresh paused (will retry)';
+    }
+  }
+
+  setInterval(poll, refreshMs);
+})();
+</script>
+{% endif %}
 {% endblock %}

@@ -17,9 +17,8 @@ def test_valid_login_reaches_dashboard(client):
         follow_redirects=True,
     )
     assert response.status_code == 200
-    assert b"Monitoring" in response.data
-    assert b"Servers" in response.data
-    assert b"Live metrics" in response.data
+    assert b"Dashboard" in response.data
+    assert b"Add server" in response.data
 
 
 def test_invalid_password_rejected(client):

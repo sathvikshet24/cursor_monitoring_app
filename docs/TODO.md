@@ -32,76 +32,76 @@ Reference: [requirements.md](./requirements.md)
 
 ## Phase 3 — CI/CD (GitHub Actions)
 
-- [ ] Add `.github/workflows/ci.yml`
-- [ ] On push/PR: install deps, run unit tests (pytest), fail on test failure
-- [ ] Optionally run a minimal lint step (e.g. `ruff` or `flake8`) if already lightweight to add
-- [ ] **Security:** CI must not require real secrets; use dummy env vars in the workflow; never echo passwords
-- [ ] **Docs:** Add a short “CI” section in `README.md` describing what the workflow runs
+- [x] Add `.github/workflows/ci.yml`
+- [x] On push/PR: install deps, run unit tests (pytest), fail on test failure
+- [x] Optionally run a minimal lint step (e.g. `ruff` or `flake8`) if already lightweight to add
+- [x] **Security:** CI must not require real secrets; use dummy env vars in the workflow; never echo passwords
+- [x] **Docs:** Add a short “CI” section in `README.md` describing what the workflow runs
 
 ---
 
 ## Phase 4 — SQLite server registry (add / remove hosts)
 
-- [ ] Add SQLite model/table for monitored servers (`hostname`/`ip`, optional label, created timestamp)
-- [ ] Auto-create DB on first run
-- [ ] Add authenticated form to add a server (hostname or IP required)
-- [ ] Add authenticated action to remove a server from the local registry
-- [ ] Show server list on the dashboard (even if metrics are still placeholders)
-- [ ] Add unit tests for add/remove and auth required for those actions
-- [ ] **Security:** Validate/sanitize hostname/IP input (reject empty/malicious strings); CSRF protection for forms (Flask-WTF or equivalent simple token); only local DB writes—no remote changes
-- [ ] **Docs:** Document DB file location, that remove only unregisters locally, and sample add-server flow in `README.md`
+- [x] Add SQLite model/table for monitored servers (`hostname`/`ip`, optional label, created timestamp)
+- [x] Auto-create DB on first run
+- [x] Add authenticated form to add a server (hostname or IP required)
+- [x] Add authenticated action to remove a server from the local registry
+- [x] Show server list on the dashboard (even if metrics are still placeholders)
+- [x] Add unit tests for add/remove and auth required for those actions
+- [x] **Security:** Validate/sanitize hostname/IP input (reject empty/malicious strings); CSRF protection for forms (Flask-WTF or equivalent simple token); only local DB writes—no remote changes
+- [x] **Docs:** Document DB file location, that remove only unregisters locally, and sample add-server flow in `README.md`
 
 ---
 
 ## Phase 5 — SSH config and safe connection helper
 
-- [ ] Add env-based SSH settings (user, key path or password, port, timeout)
-- [ ] Implement a small SSH helper (e.g. Paramiko) with connection timeout and clear error return
-- [ ] Add unit tests with mocks (no real SSH in CI)
-- [ ] **Security:** Read-only remote commands only; never log private keys or passwords; keep credentials in env/files outside git; disable or avoid unknown-host auto-accept in a documented demo-safe way
-- [ ] **Docs:** Document required SSH env vars and that all targets share one demo credential set
+- [x] Add env-based SSH settings (user, key path or password, port, timeout)
+- [x] Implement a small SSH helper (e.g. Paramiko) with connection timeout and clear error return
+- [x] Add unit tests with mocks (no real SSH in CI)
+- [x] **Security:** Read-only remote commands only; never log private keys or passwords; keep credentials in env/files outside git; disable or avoid unknown-host auto-accept in a documented demo-safe way
+- [x] **Docs:** Document required SSH env vars and that all targets share one demo credential set
 
 ---
 
 ## Phase 6 — Collect CPU and memory over SSH
 
-- [ ] Run read-only remote commands to gather CPU % and memory used/available
-- [ ] Show values on dashboard / server detail section
-- [ ] On SSH failure, show status like “SSH failed” without crashing
-- [ ] Unit tests with mocked SSH command output
-- [ ] **Security:** Allowlist exact remote commands (no user-supplied shell strings); treat remote output as untrusted when rendering (escape in Jinja)
-- [ ] **Docs:** Note which commands are used and that metrics are live snapshots only
+- [x] Run read-only remote commands to gather CPU % and memory used/available
+- [x] Show values on dashboard / server detail section
+- [x] On SSH failure, show status like “SSH failed” without crashing
+- [x] Unit tests with mocked SSH command output
+- [x] **Security:** Allowlist exact remote commands (no user-supplied shell strings); treat remote output as untrusted when rendering (escape in Jinja)
+- [x] **Docs:** Note which commands are used and that metrics are live snapshots only
 
 ---
 
 ## Phase 7 — Collect network and ports over SSH
 
-- [ ] Gather simple network RX/TX snapshot
-- [ ] Gather listening/open ports list (`ss`/`netstat` style, read-only)
-- [ ] Display on server detail area of the single dashboard
-- [ ] Unit tests with mocked output for network and ports
-- [ ] **Security:** Keep command allowlist; escape port/process text in UI; no links that trigger remote actions
-- [ ] **Docs:** Update metrics table in README (CPU, memory, network, ports)
+- [x] Gather simple network RX/TX snapshot
+- [x] Gather listening/open ports list (`ss`/`netstat` style, read-only)
+- [x] Display on server detail area of the single dashboard
+- [x] Unit tests with mocked output for network and ports
+- [x] **Security:** Keep command allowlist; escape port/process text in UI; no links that trigger remote actions
+- [x] **Docs:** Update metrics table in README (CPU, memory, network, ports)
 
 ---
 
 ## Phase 8 — Live auto-refresh (30 seconds)
 
-- [ ] Auto-refresh dashboard metrics every 30 seconds (JS poll of a JSON endpoint or full-page refresh)
-- [ ] Ensure refresh does not bypass auth
-- [ ] Basic test or manual checklist for auth on the refresh endpoint
-- [ ] **Security:** Refresh endpoint requires login; no sensitive SSH errors leaked beyond a safe message
-- [ ] **Docs:** Document 30s refresh behavior and how to change the interval if needed
+- [x] Auto-refresh dashboard metrics every 30 seconds (JS poll of a JSON endpoint or full-page refresh)
+- [x] Ensure refresh does not bypass auth
+- [x] Basic test or manual checklist for auth on the refresh endpoint
+- [x] **Security:** Refresh endpoint requires login; no sensitive SSH errors leaked beyond a safe message
+- [x] **Docs:** Document 30s refresh behavior and how to change the interval if needed
 
 ---
 
 ## Phase 9 — UI polish and demo acceptance pass
 
-- [ ] Tighten single-dashboard UX: server list, add/remove, detail metrics, clear empty/error states
-- [ ] Confirm UI remains metrics-read-only (no destructive remote controls)
-- [ ] Run through PRD acceptance criteria checklist
-- [ ] **Security:** Quick review—no secrets in repo, forms protected, outputs escaped, SSH allowlist intact
-- [ ] **Docs:** Final README pass (setup, env, run, test, CI); keep steps minimal for local Cursor host
+- [x] Tighten single-dashboard UX: server list, add/remove, detail metrics, clear empty/error states
+- [x] Confirm UI remains metrics-read-only (no destructive remote controls)
+- [x] Run through PRD acceptance criteria checklist
+- [x] **Security:** Quick review—no secrets in repo, forms protected, outputs escaped, SSH allowlist intact
+- [x] **Docs:** Final README pass (setup, env, run, test, CI); keep steps minimal for local Cursor host
 
 ---
 

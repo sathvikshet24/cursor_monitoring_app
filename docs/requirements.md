@@ -123,13 +123,13 @@ No Docker, no production hardening required for this demo.
 
 ## 9. Acceptance criteria
 
-- [ ] Login works only with `admin` + correct password (hash verified)
-- [ ] Logged-out users cannot access dashboard or server management
-- [ ] Admin can add a Linux host by hostname/IP and remove it
-- [ ] Dashboard shows CPU, memory, network, and ports for reachable hosts
-- [ ] UI refreshes metrics about every 30 seconds
-- [ ] Metrics UI does not offer destructive remote actions
-- [ ] App starts locally with venv + Flask and SQLite
+- [x] Login works only with `admin` + correct password (hash verified)
+- [x] Logged-out users cannot access dashboard or server management
+- [x] Admin can add a Linux host by hostname/IP and remove it
+- [x] Dashboard shows CPU, memory, network, and ports for reachable hosts
+- [x] UI refreshes metrics about every 30 seconds
+- [x] Metrics UI does not offer destructive remote actions
+- [x] App starts locally with venv + Flask and SQLite
 
 ---
 
