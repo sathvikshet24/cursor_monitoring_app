@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="login-wrap">
+  <div class="login-panel">
+    <h1 class="page-heading mb-1">Sign in</h1>
+    <p class="page-lead mb-4">Use the admin account to open the monitoring dashboard.</p>
+
+    {% if error %}
+    <div class="alert alert-danger py-2" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('main.login') }}" class="login-form" autocomplete="off">
+      <div class="mb-3">
+        <label class="form-label" for="username">Username</label>
+        <input class="form-control app-input" type="text" id="username" name="username"
+               value="admin" required autofocus>
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-control app-input" type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" class="btn btn-accent w-100">Sign in</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

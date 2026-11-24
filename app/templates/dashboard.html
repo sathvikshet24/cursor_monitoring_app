@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-strip mb-4">
+  <span class="phase-badge">Read-only demo</span>
+  <h1 class="page-heading">Monitoring — read-only demo</h1>
+  <p class="page-lead">
+    Agentless Linux host metrics for L1–L3 teams. Inventory and live CPU / memory / network / ports
+    appear as hosts are added.
+  </p>
+</section>
+
+<section class="option-grid" aria-label="Dashboard options">
+  <article class="option-card">
+    <h2 class="option-title">Servers</h2>
+    <p class="option-copy mb-0">
+      {% if servers %}
+        {{ servers|length }} host{{ 's' if servers|length != 1 else '' }} registered. Inventory and reachability show here.
+      {% else %}
+        Inventory and reachability will appear here after admin setup.
+      {% endif %}
+    </p>
+  </article>
+
+  <article class="option-card">
+    <h2 class="option-title">Live metrics</h2>
+    <p class="option-copy mb-0">
+      CPU, memory, network, and listening ports refresh every 30 seconds.
+    </p>
+  </article>
+</section>
+{% endblock %}
